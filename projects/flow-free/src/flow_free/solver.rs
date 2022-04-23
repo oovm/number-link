@@ -11,34 +11,61 @@ use rs_graph::{
 use std::collections::BTreeSet;
 
 impl FlowFreeBoard {
-    unsafe fn get_edges(&self) -> BTreeSet<(usize, usize, usize)> {
+    fn get_start(&self) -> usize {
+        0
+    }
+    fn get_end(&self) -> usize {
+        self.colors.len() + 1
+    }
+    pub fn get_vertex_capacity(&self) -> Vec<u8> {
+        let mut out = vec![0];
+        for i in self.board {
+            if i < 0 {
+                out.push(-i as u8);
+            }
+            else if i > 0 {
+                out.push(1);
+            }
+            else {
+                out.push(0)
+            }
+        }
+        out.push(0);
+        out
+    }
+
+    pub fn get_edges(&self) -> BTreeSet<(usize, usize)> {
         let mut out = BTreeSet::new();
         let mut color = BTreeSet::new();
-        let h = self.board.shape().get_unchecked(0);
-        let w = self.board.shape().get_unchecked(1);
-        let mut index = 1;
-        for line in self.board.lanes(Axis(0)).into_iter() {
-            for n in line.iter() {
+        let (h, w) = match self.board.shape() {
+            [h, w] => (h, w),
+            _ => panic!("Dimension mismatch"),
+        };
+        for (i, line) in self.board.lanes(Axis(0)).into_iter().enumerate() {
+            for (j, n) in line.iter().enumerate() {
+                let index = i * w + j;
                 if *n > 0 {
                     match color.insert(*n) {
-                        true => out.insert((0, index, 1)),
-                        false => out.insert((index, self.colors + 1, 1)),
+                        // 流入
+                        true => out.insert((self.get_start(), index)),
+                        // 流出
+                        false => out.insert((index, self.get_end())),
                     };
                 }
-                if i + 1 < *h {
-                    let right = self.board[[i + 1, j]];
-                    if right < 0 {
-                        out.insert((*n as usize, -right as usize, 1));
-                    }
-                    else if right > 0 {
-                        out.insert((*n as usize, -right as usize, 1));
+                if i + 1 <= *w {
+                    let right = self.board[[j, i + 1]];
+                    let right_index = index + 1;
+                    if right != 0 {
+                        out.insert((index, right_index));
                     }
                 }
-                if j + 1 < *w {
-                    let down = self.board[[i, j + 1]];
-                    if down > 0 {}
+                if j + 1 <= *h {
+                    let down = self.board[[j + 1, i]];
+                    let down_index = index + w;
+                    if down != 0 {
+                        out.insert((index, down_index));
+                    }
                 }
-                index += 1
             }
         }
         out
@@ -84,16 +111,15 @@ s    1   1   2    t
 
 #[test]
 fn test() {
-    unsafe {
-        FlowFreeBoard::from_str(
-            r#"
+    let g = FlowFreeBoard::from_str(
+        r#"
     1  -  2  3 -
     -  2  -  - -
     -  3  -  4 -
     -  1  -  - -
     "#,
-        )
-        .unwrap()
-        .get_edges();
-    }
+    )
+    .unwrap();
+    g.get_edges();
+    println!("{:?}", g.get_vertex_capacity())
 }

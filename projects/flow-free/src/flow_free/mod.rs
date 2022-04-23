@@ -2,7 +2,9 @@ mod display;
 mod solver;
 use ndarray::Array2;
 pub use serde_derive::{Deserialize, Serialize};
+use smallvec::SmallVec;
 use std::{
+    collections::BTreeMap,
     fmt::{Debug, Display, Formatter},
     num::ParseIntError,
     str::FromStr,
@@ -13,5 +15,5 @@ pub struct FlowFreeBoard {
     /// - `-1` : cap = 1
     /// - `0` : cap = 0
     board: Array2<i8>,
-    colors: usize,
+    colors: BTreeMap<i8, Vec<(usize, usize)>>,
 }

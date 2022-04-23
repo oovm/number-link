@@ -29,13 +29,22 @@ impl FromStr for FlowFreeBoard {
         let game = game.trim();
         let h = game.lines().count();
         let w = game.lines().nth(0).ok_or(())?.split_ascii_whitespace().count();
-        let mut color = BTreeSet::new();
+        let mut colors = BTreeMap::new();
         let mut board = Array2::from_elem((h, w), -1);
         for (i, line) in game.lines().enumerate() {
             for (j, item) in line.split_ascii_whitespace().enumerate() {
                 if let Ok(n) = item.parse::<i8>() {
                     board[[i, j]] = n;
-                    color.insert(n);
+                    match colors.get(&(n as u8)) {
+                        Some(s) => {
+                            s.insert(n as u8, (i, j));
+                        }
+                        None => {
+                            let mut v = Vec::with_capacity(2);
+                            v.push((i, j));
+                            colors.insert(n as u8, v)
+                        }
+                    }
                     continue;
                 }
                 board[[i, j]] = match item {
@@ -46,9 +55,9 @@ impl FromStr for FlowFreeBoard {
                 }
             }
         }
-        if color != BTreeSet::from_iter(0..color.len()) {
+        if colors.iter().last().ok_or(())?.0 != colors.len() {
             return Err(());
         }
-        Ok(Self { board, colors: color.len() })
+        Ok(Self { board, colors })
     }
 }
