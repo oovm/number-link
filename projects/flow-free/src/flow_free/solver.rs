@@ -1,12 +1,10 @@
 use super::*;
 use ndarray::Axis;
 use rs_graph::{
-    maxflow::{dinic, pushrelabel, MaxFlow},
+    maxflow::dinic,
     string::{from_ascii, Data},
     traits::*,
-    vec::NodeIndexer,
-    vecgraph::Edge,
-    EdgeVec, Graph, LinkedListGraph, Net,
+    Net,
 };
 use std::collections::BTreeSet;
 
@@ -19,15 +17,11 @@ impl FlowFreeBoard {
     }
     pub fn get_vertex_capacity(&self) -> Vec<u8> {
         let mut out = vec![0];
-        for i in self.board {
-            if i < 0 {
-                out.push(-i as u8);
-            }
-            else if i > 0 {
-                out.push(1);
-            }
-            else {
-                out.push(0)
+        for i in &self.board {
+            match -i as u8 {
+                n if *i < 0 => out.push(n),
+                _ if *i > 0 => out.push(1),
+                _ => out.push(0),
             }
         }
         out.push(0);
@@ -120,6 +114,6 @@ fn test() {
     "#,
     )
     .unwrap();
+    println!("{:?}", g.get_vertex_capacity());
     g.get_edges();
-    println!("{:?}", g.get_vertex_capacity())
 }
