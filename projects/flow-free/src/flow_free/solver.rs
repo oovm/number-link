@@ -1,4 +1,5 @@
 use super::*;
+use ndarray::Axis;
 use rs_graph::{
     maxflow::{dinic, pushrelabel, MaxFlow},
     string::{from_ascii, Data},
@@ -7,14 +8,44 @@ use rs_graph::{
     vecgraph::Edge,
     EdgeVec, Graph, LinkedListGraph, Net,
 };
+use std::collections::BTreeSet;
 
 impl FlowFreeBoard {
-    fn get_edges(&self) {}
+    unsafe fn get_edges(&self) -> BTreeSet<(usize, usize, usize)> {
+        let mut out = BTreeSet::new();
+        let mut color = BTreeSet::new();
+        let h = self.board.shape().get_unchecked(0);
+        let w = self.board.shape().get_unchecked(1);
+        let mut index = 1;
+        for line in self.board.lanes(Axis(0)).into_iter() {
+            for n in line.iter() {
+                if *n > 0 {
+                    match color.insert(*n) {
+                        true => out.insert((0, index, 1)),
+                        false => out.insert((index, self.colors + 1, 1)),
+                    };
+                }
+                if i + 1 < *h {
+                    let right = self.board[[i + 1, j]];
+                    if right < 0 {
+                        out.insert((*n as usize, -right as usize, 1));
+                    }
+                    else if right > 0 {
+                        out.insert((*n as usize, -right as usize, 1));
+                    }
+                }
+                if j + 1 < *w {
+                    let down = self.board[[i, j + 1]];
+                    if down > 0 {}
+                }
+                index += 1
+            }
+        }
+        out
+    }
     fn get_colors(&self) {}
 
     fn as_graph(&self) -> Net {
-        let mut out = LinkedListGraph::new();
-
         let Data { graph: g, weights: upper, nodes } = from_ascii::<Net>(
             r"
      a---2-->b
@@ -53,14 +84,16 @@ s    1   1   2    t
 
 #[test]
 fn test() {
-    FlowFreeBoard::from_str(
-        r#"
-    1  -  2  3
-    -  2  -  -
-    -  3  -  4
-    -  1  -  -
+    unsafe {
+        FlowFreeBoard::from_str(
+            r#"
+    1  -  2  3 -
+    -  2  -  - -
+    -  3  -  4 -
+    -  1  -  - -
     "#,
-    )
-    .unwrap()
-    .as_graph();
+        )
+        .unwrap()
+        .get_edges();
+    }
 }

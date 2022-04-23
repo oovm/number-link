@@ -13,4 +13,5 @@ pub struct FlowFreeBoard {
     /// - `-1` : cap = 1
     /// - `0` : cap = 0
     board: Array2<i8>,
+    colors: usize,
 }
