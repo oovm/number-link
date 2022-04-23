@@ -1,5 +1,6 @@
 [package]
-name = "flow-free"
+name = "wolfram-debug"
+publish = false
 version = "0.0.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
@@ -8,6 +9,11 @@ documentation = "https://docs.rs/flow-free"
 readme = "Readme.md"
 license = "MPL-2.0"
 edition = "2021"
+
+
+[lib]
+name = "debug"
+crate-type = ["cdylib"]
 
 [dependencies]
 rs-graph = "0.20.1"
